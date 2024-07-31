@@ -103,4 +103,42 @@ tripdata3 <- tripdata2[-canc_trip, ]
 # Record IDs of cancelled trips
 write.csv(canc_trip, "cancelled_trips.csv", row.names = FALSE)
 
-# 
+# IDENTIFY OUTLIERS
+
+# Overview of variables in each dataset 
+colnames(stationdata)
+colnames(tripdata3)
+colnames(weatherdata)
+
+# Create function to detect outliers using IQR
+
+det_outl <- function(df, col, multiplier = 2) {
+  Q1 <- quantile(df[[col]], 0.25, na.rm = TRUE)
+  Q3 <- quantile(df[[col]], 0.75, na.rm = TRUE)
+  IQR <- Q3 - Q1
+  lower_bound <- Q1 - multiplier * IQR
+  upper_bound <- Q3 + multiplier * IQR
+  
+  which(df[[col]] < lower_bound | df[[col]] > upper_bound)
+}
+
+# Checking tripdata3 variables
+trip_var <- c("duration")
+
+# Detect outliers
+trip_outl <- lapply(trip_var, function(col) det_outl(tripdata3, col))
+
+# Unlist the list of outliers and select only unique outliers for removal
+# to avoid duplicate removals
+trip_outl_all <- unique(unlist(trip_outl))
+
+# Record outlier trip IDs
+trip_outl_id<- tripdata3$id[trip_outl_all]
+write.csv(data.frame(TripID = trip_outl_id), "trip_outliers_ids.csv", row.names = FALSE)
+
+# Remove duration outliers from the trip dataset
+tripdata4 <- tripdata3[-trip_outl_all, ]
+
+summary(tripdata4)
+
+
