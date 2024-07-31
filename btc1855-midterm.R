@@ -191,11 +191,11 @@ hourly_volume <- tripdata4 %>%
 top_peak_hours <- hourly_volume %>%
   group_by(weekday) %>%
   arrange(desc(trip_count)) %>%
-  slice_head(n = 4) %>%  # Select the top 3 rows
+  slice_head(n = 4) %>%  # Select the top 4 rows
   ungroup()
 
 # Histograms visualizing peak hours per weekday
-# Encircled red bars are the top 3 peak hours
+# Encircled red bars are the top 4 peak hours
 ggplot(hourly_volume, aes(x = hour, y = trip_count, fill = weekday)) +
   geom_col() +
   facet_wrap(~weekday, scales = 'free_y') +
@@ -205,7 +205,5 @@ ggplot(hourly_volume, aes(x = hour, y = trip_count, fill = weekday)) +
        x = "Hour of the Day",
        y = "Trip Count") +
   theme_minimal()
-
-
 
 
