@@ -228,7 +228,7 @@ top_end_stations <- filt_rush_trips %>%
   slice_head(n = 10)
 
 # WEEKDAY STATIONS
-# Identify top 10 most frequent starting stations on the Weekend
+# Identify top 10 most frequent starting stations on the weekend
 top_start_weekend <- tripdata4 %>%
   filter(day %in% c("Sun", "Sat")) %>%
   group_by(day, start_station_name) %>%
@@ -237,7 +237,7 @@ top_start_weekend <- tripdata4 %>%
   arrange(desc(trip_count)) %>%
   slice_head(n = 10)
 
-# Identify top 10 most frequent ending stations on the Weekend
+# Identify top 10 most frequent ending stations on the weekend
 top_end_weekend <- tripdata4 %>%
   filter(day %in% c("Sun", "Sat")) %>%
   group_by(day, end_station_name) %>%
