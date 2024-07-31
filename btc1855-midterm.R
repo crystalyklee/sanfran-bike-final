@@ -36,6 +36,11 @@ summary(weatherdata)
 # Check for duplicates
 any(duplicated(weatherdata))
 
+# Change "T" to 0.01 to indicate trace amounts of precipitation
+weatherdata$precipitation_inches <- 
+  as.numeric(ifelse(weatherdata$precipitation_inches == "T", 
+                    0.01, weatherdata$precipitation_inches))
+
 # Change date into Date class
 weatherdata$date <- mdy(weatherdata$date)
 weatherdata[weatherdata == ""] <- NA
@@ -122,7 +127,7 @@ det_outl <- function(df, col, multiplier = 2) {
   which(df[[col]] < lower_bound | df[[col]] > upper_bound)
 }
 
-# Choosing tripdata3 variables
+# Choosing tripdata3 variables for outlier detection
 trip_var <- c("duration")
 
 # Detect outliers
@@ -141,13 +146,7 @@ tripdata4 <- tripdata3[-trip_outl_all, ]
 
 summary(tripdata4)
 
-### MOVE THIS IN THE MAIN BRANCH 
-# Change "T" to 0.01 to indicate trace amounts of precipitation
-weatherdata$precipitation_inches <- 
-  as.numeric(ifelse(weatherdata$precipitation_inches == "T", 
-                    0.01, weatherdata$precipitation_inches))
-
-# Choosing weatherdata variables 
+# Choosing weatherdata variables for outlier detection
 weather_var <- c("max_temperature_f", "mean_temperature_f", "min_temperature_f",
                      "max_visibility_miles", "mean_visibility_miles", "min_visibility_miles",
                      "max_wind_speed_mph", "mean_wind_speed_mph", "max_gust_speed_mph",
