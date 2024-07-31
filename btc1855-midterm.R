@@ -228,7 +228,7 @@ top_end_stations <- filt_rush_trips %>%
   slice_head(n = 10)
 
 # WEEKDAY STATIONS
-# Identify top 10 most frequent starting stations on the weekend
+# Identify top 10 most frequent starting stations on the Weekend
 top_start_weekend <- tripdata4 %>%
   filter(day %in% c("Sun", "Sat")) %>%
   group_by(day, start_station_name) %>%
@@ -237,7 +237,7 @@ top_start_weekend <- tripdata4 %>%
   arrange(desc(trip_count)) %>%
   slice_head(n = 10)
 
-# Identify top 10 most frequent ending stations on the weekend
+# Identify top 10 most frequent ending stations on the Weekend
 top_end_weekend <- tripdata4 %>%
   filter(day %in% c("Sun", "Sat")) %>%
   group_by(day, end_station_name) %>%
@@ -245,3 +245,17 @@ top_end_weekend <- tripdata4 %>%
   arrange(day, desc(trip_count)) %>%
   group_by(day) %>%
   slice_head(n = 10)
+
+#Calculate the average utilization of bikes for 
+#each month (total time used/total time in month).
+
+# BIKE USAGE
+tripdata4 <- tripdata4 %>%
+  mutate(
+    month = month(start_datetime, label = TRUE),  
+  )
+
+# Calculate average bike usage for each month 
+avg_bike_time <- tripdata4 %>%
+  group_by(month) %>%
+  summarise(average_trip_duration_mins = mean(duration) / 60, .groups = 'drop')
