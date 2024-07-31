@@ -93,6 +93,8 @@ trip_eda(weatherdata)
 # Duration of the trip is less than 3 minutes and the start and end station are the same
 canc_trip <- which(tripdata2$duration / 60 < 3 & tripdata2$start_station_name == tripdata2$end_station_name)
 canc_trip_id <- tripdata2$id[canc_trip]
+
+# Count number of trips that are cancelled
 length(canc_trip)
 
 # Remove rows of cancelled trips
@@ -100,3 +102,5 @@ tripdata3 <- tripdata2[-canc_trip, ]
 
 # Record IDs of cancelled trips
 write.csv(canc_trip, "cancelled_trips.csv", row.names = FALSE)
+
+# 
