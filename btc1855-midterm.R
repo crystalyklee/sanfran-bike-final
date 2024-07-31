@@ -87,4 +87,3 @@ weather_eda <- function(weatherdata)
 }
 
 trip_eda(weatherdata)
-
