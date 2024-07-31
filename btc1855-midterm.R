@@ -174,7 +174,7 @@ tripdata4$start_time <- trimws(tripdata4$start_time)
 # Combine start_date and start_time to create a start_datetime column
 tripdata4$start_datetime <- as.POSIXct(paste(tripdata4$start_date, tripdata4$start_time), format="%Y-%m-%d %H:%M")
 
-# Extract weekday and hour
+# Extract day of the week and hour
 tripdata4 <- tripdata4 %>%
   mutate(
     weekday = wday(start_datetime, label = TRUE),  
@@ -183,9 +183,9 @@ tripdata4 <- tripdata4 %>%
 
 # Number of trips per hour during each weekday
 hourly_volume <- tripdata4 %>%
+  filter(weekday %in% c("Mon", "Tue", "Wed", "Thu", "Fri")) %>%  # Exclude weekends
   group_by(weekday, hour) %>%
-  summarise(trip_count = n()) %>%
-  ungroup()
+  summarise(trip_count = n(), .groups = 'drop')  # Calculate trips per hour
 
 # Find the top peak hour for each weekday 
 top_peak_hours <- hourly_volume %>%
@@ -226,4 +226,5 @@ top_end_stations <- filt_rush_trips %>%
   group_by(weekday, hour) %>%
   arrange(desc(trip_count)) %>%
   slice_head(n = 10)
+
 
