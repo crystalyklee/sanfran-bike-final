@@ -164,3 +164,48 @@ weatherdata2 <- weatherdata[-weather_outl_all, ]
 
 summary(weatherdata2)
 
+# IDENTIFY RUSH HOURS
+library(lubridate)
+library(dplyr)
+
+# Remove extra spaces in start_time so we can convert it to POSIXct 
+tripdata4$start_time <- trimws(tripdata4$start_time)
+
+# Combine start_date and start_time to create a start_datetime column
+tripdata4$start_datetime <- as.POSIXct(paste(tripdata4$start_date, tripdata4$start_time), format="%Y-%m-%d %H:%M")
+
+# Extract weekday and hour
+tripdata4 <- tripdata4 %>%
+  mutate(
+    weekday = wday(start_datetime, label = TRUE),  
+    hour = hour(start_datetime) 
+  )
+
+# Number of trips per hour during each weekday
+hourly_volume <- tripdata4 %>%
+  group_by(weekday, hour) %>%
+  summarise(trip_count = n()) %>%
+  ungroup()
+
+# Find the top 4 peak hours for each weekday 
+top_peak_hours <- hourly_volume %>%
+  group_by(weekday) %>%
+  arrange(desc(trip_count)) %>%
+  slice_head(n = 4) %>%  # Select the top 3 rows
+  ungroup()
+
+# Histograms visualizing peak hours per weekday
+# Encircled red bars are the top 3 peak hours
+ggplot(hourly_volume, aes(x = hour, y = trip_count, fill = weekday)) +
+  geom_col() +
+  facet_wrap(~weekday, scales = 'free_y') +
+  geom_col(data = top_peak_hours, aes(x = hour, y = trip_count), 
+           color = "red", fill = NA, size = 1.2, show.legend = FALSE) +
+  labs(title = "Trip Volume by Hour for Each Weekday",
+       x = "Hour of the Day",
+       y = "Trip Count") +
+  theme_minimal()
+
+
+
+
