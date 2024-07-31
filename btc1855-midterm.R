@@ -187,15 +187,15 @@ hourly_volume <- tripdata4 %>%
   summarise(trip_count = n()) %>%
   ungroup()
 
-# Find the top 4 peak hours for each weekday 
+# Find the top peak hour for each weekday 
 top_peak_hours <- hourly_volume %>%
   group_by(weekday) %>%
   arrange(desc(trip_count)) %>%
-  slice_head(n = 4) %>%  # Select the top 4 rows
+  slice_head(n = 1) %>%  
   ungroup()
 
 # Histograms visualizing peak hours per weekday
-# Encircled red bars are the top 4 peak hours
+# Encircled red bars are the top peak hours
 ggplot(hourly_volume, aes(x = hour, y = trip_count, fill = weekday)) +
   geom_col() +
   facet_wrap(~weekday, scales = 'free_y') +
@@ -206,4 +206,24 @@ ggplot(hourly_volume, aes(x = hour, y = trip_count, fill = weekday)) +
        y = "Trip Count") +
   theme_minimal()
 
+# RUSH HOUR STATIONS
+# Filter trips for peak hours
+filt_rush_trips <- tripdata4 %>%
+  semi_join(top_peak_hours, by = c("weekday", "hour"))
+
+# Identify top 10 starting stations during rush hour per weekday
+top_start_stations <- filt_rush_trips %>%
+  group_by(weekday, hour, start_station_name) %>%
+  summarise(trip_count = n(), .groups = 'drop') %>%
+  group_by(weekday, hour) %>%
+  arrange(desc(trip_count)) %>%
+  slice_head(n = 10)
+
+# Identify top 10 ending stations during rush hour per weekday
+top_end_stations <- filt_rush_trips %>%
+  group_by(weekday, hour, end_station_name) %>%
+  summarise(trip_count = n(), .groups = 'drop') %>%
+  group_by(weekday, hour) %>%
+  arrange(desc(trip_count)) %>%
+  slice_head(n = 10)
 
