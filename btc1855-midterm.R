@@ -122,7 +122,7 @@ det_outl <- function(df, col, multiplier = 2) {
   which(df[[col]] < lower_bound | df[[col]] > upper_bound)
 }
 
-# Checking tripdata3 variables
+# Choosing tripdata3 variables
 trip_var <- c("duration")
 
 # Detect outliers
@@ -141,4 +141,27 @@ tripdata4 <- tripdata3[-trip_outl_all, ]
 
 summary(tripdata4)
 
+### MOVE THIS IN THE MAIN BRANCH 
+# Change "T" to 0.01 to indicate trace amounts of precipitation
+weatherdata$precipitation_inches <- 
+  as.numeric(ifelse(weatherdata$precipitation_inches == "T", 
+                    0.01, weatherdata$precipitation_inches))
+
+# Choosing weatherdata variables 
+weather_var <- c("max_temperature_f", "mean_temperature_f", "min_temperature_f",
+                     "max_visibility_miles", "mean_visibility_miles", "min_visibility_miles",
+                     "max_wind_speed_mph", "mean_wind_speed_mph", "max_gust_speed_mph",
+                     "precipitation_inches", "cloud_cover")
+
+# Detect outliers for each weather variable chosen
+weather_outl <- lapply(weather_var, function(col) det_outl(weatherdata, col))
+
+# Unlist the list of outliers and select only unique outliers for removal
+# to avoid duplicate removals
+weather_outl_all <- unique(unlist(weather_outl))
+
+# Remove duration outliers from the weather dataset
+weatherdata2 <- weatherdata[-weather_outl_all, ]
+
+summary(weatherdata2)
 
