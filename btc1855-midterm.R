@@ -40,3 +40,50 @@ any(duplicated(weatherdata))
 weatherdata$date <- mdy(weatherdata$date)
 weatherdata[weatherdata == ""] <- NA
 
+# EXPLORATORY DATA ANALYSIS
+
+install.packages("funModeling")
+install.packages("Hmisc")
+library(funModeling) 
+library(tidyverse) 
+library(Hmisc)
+
+# EDA on stationdata
+station_eda <- function(stationdata)
+{
+  glimpse(stationdata)
+  print(status(stationdata))
+  freq(stationdata) 
+  print(profiling_num(stationdata))
+  plot_num(stationdata)
+  describe(stationdata)
+}
+
+station_eda(stationdata)
+
+# EDA on tripdata
+trip_eda2 <- function(tripdata2)
+{
+  glimpse(tripdata2)
+  print(status(tripdata2))
+  freq(tripdata2) 
+  print(profiling_num(tripdata2))
+  plot_num(tripdata2)
+  describe(tripdata2)
+}
+
+trip_eda(tripdata2)
+
+
+# EDA on weatherdata
+weather_eda <- function(weatherdata)
+{
+  glimpse(weatherdata)
+  print(status(weatherdata))
+  freq(weatherdata) 
+  print(profiling_num(weatherdata))
+  plot_num(weatherdata)
+  describe(weatherdata)
+}
+
+trip_eda(weatherdata)
