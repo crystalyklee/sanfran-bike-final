@@ -2,6 +2,8 @@
 # MIDTERM PROJECT
 # CRYSTAL LEE
 
+library(tidyverse)
+
 stationdata <- read.csv('station.csv')
 tripdata <-read.csv('trip.csv')
 weatherdata <- read.csv('weather.csv')
@@ -50,7 +52,6 @@ weatherdata[weatherdata == ""] <- NA
 install.packages("funModeling")
 install.packages("Hmisc")
 library(funModeling) 
-library(tidyverse) 
 library(Hmisc)
 
 # EDA on stationdata
@@ -67,7 +68,7 @@ station_eda <- function(stationdata)
 station_eda(stationdata)
 
 # EDA on tripdata
-trip_eda2 <- function(tripdata2)
+trip_eda <- function(tripdata2)
 {
   glimpse(tripdata2)
   print(status(tripdata2))
@@ -209,7 +210,7 @@ ggplot(hourly_volume, aes(x = hour, y = trip_count, fill = day)) +
 # RUSH HOUR STATIONS
 # Filter trips for peak hours
 filt_rush_trips <- tripdata4 %>%
-  semi_join(top_peak_hours, by = c("weekday", "hour"))
+  semi_join(top_peak_hours, by = c("day", "hour"))
 
 # Identify top 10 starting stations during rush hour per weekday
 top_start_stations <- filt_rush_trips %>%
@@ -277,7 +278,7 @@ avg_utilization <- tripdata4 %>%
   summarise(total_time_used = sum(duration) / 60, .groups = 'drop') %>%  # Convert to minutes
   left_join(days_per_month_df, by = "month") %>%  # Join with days_per_month_df
   mutate(
-    total_time_available = days * 24 * 60 * num_bikes,  # Total time per month in minutes
+    total_time_available = days * 24 * 60 * unique_bikes_per_month$num_bikes,  # Total time per month in minutes
     utilization_mins = total_time_used / total_time_available  # Calculate utilization ratio
   ) %>%
   select(month, utilization_mins)  # Select relevant columns
@@ -322,3 +323,13 @@ ggcorrplot(cor_matrix, lab = TRUE, lab_size = 3, type = "full",
            ggtheme = ggplot2::theme_gray())
 
 
+model <- lm(duration ~ max_temperature_f + mean_temperature_f + 
+              min_temperature_f + max_visibility_miles + mean_visibility_miles +
+              min_visibility_miles + max_wind_speed_mph + mean_wind_speed_mph +
+              max_gust_speed_mph + precipitation_inches + cloud_cover, 
+            data = combined_data)
+
+# Create a time series plot
+ggplot(trip_weather_combo, aes(x = start_date, y = duration)) +
+  geom_line() +
+  labs(title = "Bike Rentals Over Time", x = "Date", y = "Duration (minutes)")
