@@ -281,3 +281,41 @@ avg_utilization <- tripdata4 %>%
     utilization_mins = total_time_used / total_time_available  # Calculate utilization ratio
   ) %>%
   select(month, utilization_mins)  # Select relevant columns
+
+# WEATHER DATA
+# Clean tripdata and remove irrelevant columns that were previously created for analysis
+tripdata5 <- tripdata4 %>%
+  select(-weekday, -hour, -day, -month, -start_datetime)
+
+# Combine tripdata5 and weatherdata2 by matching start_date to date and zip_code
+tripdata5$zip_code <- as.integer(tripdata5$zip_code) # Change tripdata5 zip_code to integer for joining
+
+trip_weather_combo <- inner_join(tripdata5, weatherdata2, 
+                                 by = c("start_date" = "date", "zip_code" = "zip_code"))
+
+# Left join so we can keep all the info from tripdata5 and include matching weatherdata2 where possible
+trip_weather_combo2 <- left_join(tripdata5, weatherdata2, 
+                                 by = c("start_date" = "date", "zip_code" = "zip_code"))
+summary(trip_weather_combo2)
+
+
+# Find columns with zero variance
+zero_variance_cols <- sapply(trip_weather_combo2 %>% select_if(is.numeric), function(x) sd(x) == 0)
+zero_variance_cols
+
+
+# Creating correlation matrix for all the combined dataset variables
+cor_matrix <- cor(trip_weather_combo %>%
+                    select_if(is.numeric), use = "complete.obs")
+
+# Plot the correlation matrix
+corrplot(cor_matrix, method = "circle")
+
+# Identify and flag the highest correlations
+# For example, find correlations above a certain threshold
+high_corr <- cor_matrix[abs(cor_matrix) > 0.7] # Adjust the threshold as needed
+print(high_corr)
+
+
+
+
