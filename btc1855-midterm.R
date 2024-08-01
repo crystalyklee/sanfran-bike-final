@@ -271,7 +271,7 @@ unique_bikes_per_month <- tripdata4 %>%
   group_by(month) %>%
   summarise(num_bikes = n_distinct(bike_id), .groups = 'drop')
 
-# Calculate average utilization in a single pipeline
+# Calculate average utilization per month
 avg_utilization <- tripdata4 %>%
   group_by(month) %>%
   summarise(total_time_used = sum(duration) / 60, .groups = 'drop') %>%  # Convert to minutes
