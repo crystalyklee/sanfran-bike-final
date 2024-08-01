@@ -255,21 +255,26 @@ tripdata4 <- tripdata4 %>%
     month = month(start_datetime, label = TRUE),  
   )
 
-# Calculate average trip duration for each month 
-avg_bike_time <- tripdata4 %>%
-  group_by(month) %>%
-  summarise(average_trip_duration_mins = mean(duration) / 60, .groups = 'drop')
+# Create a data frame with days per month using short-form month names
+days_per_month_df <- tibble(
+  month = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+  days = c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)  # Adjust February if needed
+)
 
 # Calculate total time used by bikes for each month
 total_time_used <- tripdata4 %>%
   group_by(month) %>%
-  summarise(total_time_used = sum(duration), .groups = 'drop')
+  summarise(total_time_used = sum(duration) / 60, .groups = 'drop')  # Convert to minutes
 
-# Calculate total time available in each month (assuming 30 days)
-total_time_available <- total_time_used %>%
-  mutate(total_time_available = 30 * 24 * 60)  # 30 days * 24 hours * 60 minutes
+# Calculate average utilization in a single pipeline
+avg_utilization <- tripdata4 %>%
+  group_by(month) %>%
+  summarise(total_time_used = sum(duration) / 60, .groups = 'drop') %>%  # Convert to minutes
+  left_join(days_per_month_df, by = "month") %>%  # Join with days_per_month_df
+  mutate(
+    total_time_available = days * 24 * 60,  # Total time in minutes
+    utilization = total_time_used / total_time_available  # Calculate utilization ratio
+  ) %>%
+  select(month, utilization)  # Select relevant columns
 
-# Calculate average utilization
-avg_utilization <- total_time_used %>%
-  mutate(utilization = total_time_used / total_time_available) 
   
