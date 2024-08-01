@@ -266,15 +266,18 @@ total_time_used <- tripdata4 %>%
   group_by(month) %>%
   summarise(total_time_used = sum(duration) / 60, .groups = 'drop')  # Convert to minutes
 
+# Calculate how many unique bike ids there were per month to figure out number of bikes
+unique_bikes_per_month <- tripdata4 %>%
+  group_by(month) %>%
+  summarise(num_bikes = n_distinct(bike_id), .groups = 'drop')
+
 # Calculate average utilization in a single pipeline
 avg_utilization <- tripdata4 %>%
   group_by(month) %>%
   summarise(total_time_used = sum(duration) / 60, .groups = 'drop') %>%  # Convert to minutes
   left_join(days_per_month_df, by = "month") %>%  # Join with days_per_month_df
   mutate(
-    total_time_available = days * 24 * 60,  # Total time in minutes
-    utilization = total_time_used / total_time_available  # Calculate utilization ratio
+    total_time_available = days * 24 * 60 * num_bikes,  # Total time per month in minutes
+    utilization_mins = total_time_used / total_time_available  # Calculate utilization ratio
   ) %>%
-  select(month, utilization)  # Select relevant columns
-
-  
+  select(month, utilization_mins)  # Select relevant columns
