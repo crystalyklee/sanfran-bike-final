@@ -228,7 +228,7 @@ top_end_stations <- filt_rush_trips %>%
   slice_head(n = 10)
 
 # WEEKDAY STATIONS
-# Identify top 10 most frequent starting stations on the weekend
+# Identify top 10 most frequent starting stations on the Weekend
 top_start_weekend <- tripdata4 %>%
   filter(day %in% c("Sun", "Sat")) %>%
   group_by(day, start_station_name) %>%
@@ -237,7 +237,7 @@ top_start_weekend <- tripdata4 %>%
   arrange(desc(trip_count)) %>%
   slice_head(n = 10)
 
-# Identify top 10 most frequent ending stations on the weekend
+# Identify top 10 most frequent ending stations on the Weekend
 top_end_weekend <- tripdata4 %>%
   filter(day %in% c("Sun", "Sat")) %>%
   group_by(day, end_station_name) %>%
@@ -245,3 +245,39 @@ top_end_weekend <- tripdata4 %>%
   arrange(day, desc(trip_count)) %>%
   group_by(day) %>%
   slice_head(n = 10)
+
+#Calculate the average utilization of bikes for 
+#each month (total time used/total time in month).
+
+# BIKE USAGE
+tripdata4 <- tripdata4 %>%
+  mutate(
+    month = month(start_datetime, label = TRUE),  
+  )
+
+# Create a data frame with days per month using short-form month names
+days_per_month_df <- tibble(
+  month = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+  days = c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)  # Adjust February if needed
+)
+
+# Calculate total time used by bikes for each month
+total_time_used <- tripdata4 %>%
+  group_by(month) %>%
+  summarise(total_time_used = sum(duration) / 60, .groups = 'drop')  # Convert to minutes
+
+# Calculate how many unique bike ids there were per month to figure out number of bikes
+unique_bikes_per_month <- tripdata4 %>%
+  group_by(month) %>%
+  summarise(num_bikes = n_distinct(bike_id), .groups = 'drop')
+
+# Calculate average utilization in a single pipeline
+avg_utilization <- tripdata4 %>%
+  group_by(month) %>%
+  summarise(total_time_used = sum(duration) / 60, .groups = 'drop') %>%  # Convert to minutes
+  left_join(days_per_month_df, by = "month") %>%  # Join with days_per_month_df
+  mutate(
+    total_time_available = days * 24 * 60 * num_bikes,  # Total time per month in minutes
+    utilization_mins = total_time_used / total_time_available  # Calculate utilization ratio
+  ) %>%
+  select(month, utilization_mins)  # Select relevant columns
