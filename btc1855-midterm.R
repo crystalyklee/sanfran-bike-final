@@ -195,6 +195,20 @@ top_peak_hours <- hourly_volume %>%
   slice_head(n = 1) %>%  
   ungroup()
 
+# Identify rush hours over the weekdays 
+weekday_rush <- hourly_volume %>%
+  group_by(hour) %>%
+  summarise(trip_count = sum(trip_count), .groups = 'drop') 
+
+# Histograms visualizing peak hours over the weekdays
+ggplot(weekday_rush, aes(x = hour, y = trip_count)) +
+  geom_col(data = weekday_rush, aes(x = hour, y = trip_count / 1000), 
+           size = 1.2, show.legend = FALSE, fill = "maroon") +
+  labs(title = "Trip Volume by Hour from Monday to Friday",
+       x = "Hour of the Day",
+       y = "Trip Count (10^3)") +
+  theme_minimal()
+
 # Histograms visualizing peak hours per weekday
 # Encircled red bars are the top peak hours
 ggplot(hourly_volume, aes(x = hour, y = trip_count, fill = day)) +
@@ -219,6 +233,15 @@ top_start_stations <- filt_rush_trips %>%
   group_by(day, hour) %>%
   arrange(desc(trip_count)) %>%
   slice_head(n = 10)
+
+# Histograms visualizing peak hours over the weekdays
+ggplot(top_start_stations, aes(x = hour, y = trip_count)) +
+  geom_col(data = top_start_stations, aes(x = hour, y = trip_count), 
+           size = 1.2, show.legend = FALSE, fill = "maroon") +
+  labs(title = "Top Starting Stations Over Weekdays",
+       x = "Starting Stations",
+       y = "Trip Count") +
+  theme_minimal()
 
 # Identify top 10 ending stations during rush hour per weekday
 top_end_stations <- filt_rush_trips %>%
@@ -327,7 +350,7 @@ model <- lm(duration ~ max_temperature_f + mean_temperature_f +
               min_temperature_f + max_visibility_miles + mean_visibility_miles +
               min_visibility_miles + max_wind_speed_mph + mean_wind_speed_mph +
               max_gust_speed_mph + precipitation_inches + cloud_cover, 
-            data = combined_data)
+              data = combined_data)
 
 # Create a time series plot
 ggplot(trip_weather_combo, aes(x = start_date, y = duration)) +
