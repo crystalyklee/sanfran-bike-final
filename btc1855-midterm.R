@@ -117,8 +117,7 @@ colnames(tripdata3)
 colnames(weatherdata)
 
 # Create function to detect outliers using IQR
-
-det_outl <- function(df, col, multiplier = 2) {
+det_outl <- function(df, col, multiplier = 1.5) {
   Q1 <- quantile(df[[col]], 0.25, na.rm = TRUE)
   Q3 <- quantile(df[[col]], 0.75, na.rm = TRUE)
   IQR <- Q3 - Q1
@@ -130,6 +129,9 @@ det_outl <- function(df, col, multiplier = 2) {
 
 # Choosing tripdata3 variables for outlier detection
 trip_var <- c("duration")
+
+# Visualize outliers in tripdata3
+boxplot(tripdata3$duration)
 
 # Detect outliers
 trip_outl <- lapply(trip_var, function(col) det_outl(tripdata3, col))
@@ -146,6 +148,9 @@ write.csv(data.frame(TripID = trip_outl_id), "trip_outliers_ids.csv", row.names 
 tripdata4 <- tripdata3[-trip_outl_all, ]
 
 summary(tripdata4)
+
+# Visualize tripdata4 after removal of outliers
+boxplot(tripdata4$duration)
 
 # Choosing weatherdata variables for outlier detection
 weather_var <- c("max_temperature_f", "mean_temperature_f", "min_temperature_f",
@@ -206,7 +211,7 @@ ggplot(weekday_rush, aes(x = hour, y = trip_count)) +
            size = 1.2, show.legend = FALSE, fill = "maroon") +
   labs(title = "Trip Volume by Hour from Monday to Friday",
        x = "Hour of the Day",
-       y = "Trip Count (10^3)") +
+       y = "Trip Count in Thousands") +
   theme_minimal()
 
 # Histograms visualizing peak hours per weekday
@@ -235,6 +240,7 @@ top_start_stations <- filt_rush_trips %>%
   slice_head(n = 10)
 
 # Histograms visualizing peak hours over the weekdays
+###### PROBLEM 
 ggplot(top_start_stations, aes(x = hour, y = trip_count)) +
   geom_col(data = top_start_stations, aes(x = hour, y = trip_count), 
            size = 1.2, show.legend = FALSE, fill = "maroon") +
