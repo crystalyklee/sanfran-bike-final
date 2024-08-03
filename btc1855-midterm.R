@@ -277,43 +277,28 @@ ggplot(top_start_stations_all, aes(x = reorder(start_station_name, total_trip_co
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-# Identify top 10 starting stations during rush hour per weekday
-top_start_stations <- filt_rush_trips %>%
-  group_by(day, hour, start_station_name) %>%
-  summarise(trip_count = n(), .groups = 'drop') %>%
-  group_by(day, hour) %>%
-  arrange(desc(trip_count)) %>%
-  slice_head(n = 10)
+# Identify top 10 ending stations during rush hour across all weekdays
+top_end_stations_all <- filt_rush_trips %>%
+  group_by(hour, end_station_name) %>%
+  summarise(total_trip_count = n(), .groups = 'drop') %>%
+  arrange(hour, desc(total_trip_count)) %>%
+  group_by(hour) %>%
+  slice_head(n = 10) 
 
-# Histograms visualizing peak hours over the weekdays
-# Create a plot
-ggplot(top_start_stations, aes(x = factor(paste(day, hour, sep = "-")), y = trip_count, fill = start_station_name)) +
+# Visualize the top 10 starting stations for each rush hour
+ggplot(top_end_stations_all, aes(x = reorder(end_station_name, total_trip_count), y = total_trip_count, fill = factor(hour))) +
   geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Top 10 Starting Stations During Rush Hour per Weekday",
-       x = "Day-Hour",
-       y = "Trip Count",
-       fill = "Start Station Name") +
+  facet_wrap(~hour, scales = 'free_y') +
+  coord_flip() + 
+  labs(title = "Top 10 Ending Stations During Peak Hours",
+       x = "Ending Station",
+       y = "Total Trip Count",
+       fill = "Hour") +
+  scale_fill_discrete(labels = legend_labels) +
+  theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-# Identify top 10 ending stations during rush hour per weekday
-top_end_stations <- filt_rush_trips %>%
-  group_by(day, hour, end_station_name) %>%
-  summarise(trip_count = n(), .groups = 'drop') %>%
-  group_by(day, hour) %>%
-  arrange(desc(trip_count)) %>%
-  slice_head(n = 10)
-
-# Create a plot
-ggplot(top_end_stations, aes(x = factor(paste(day, hour, sep = "-")), y = trip_count, fill = end_station_name)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Top 10 Ending Stations During Rush Hour per Weekday",
-       x = "Day-Hour",
-       y = "Trip Count",
-       fill = "End Station Name") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
-
-# WEEKDAY STATIONS
+# WEEKEND STATIONS
 # Identify top 10 most frequent starting stations on the Weekend
 top_start_weekend <- tripdata4 %>%
   filter(day %in% c("Sun", "Sat")) %>%
