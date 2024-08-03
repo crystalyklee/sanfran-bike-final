@@ -38,9 +38,9 @@ summary(weatherdata)
 # Check for duplicates
 any(duplicated(weatherdata))
 
-# Change "T" to 0.01 to indicate trace amounts of precipitation
+Change "T" to 0.01 to indicate trace amounts of precipitation
 weatherdata$precipitation_inches <- 
-  as.numeric(ifelse(weatherdata$precipitation_inches == "T", 
+ as.numeric(ifelse(weatherdata$precipitation_inches == "T", 
                     0.01, weatherdata$precipitation_inches))
 
 # Change date into Date class
@@ -156,7 +156,7 @@ boxplot(tripdata4$duration)
 weather_var <- c("max_temperature_f", "mean_temperature_f", "min_temperature_f",
                      "max_visibility_miles", "mean_visibility_miles", "min_visibility_miles",
                      "max_wind_speed_mph", "mean_wind_speed_mph", "max_gust_speed_mph",
-                     "precipitation_inches", "cloud_cover")
+                     "cloud_cover")
 
 # Detect outliers for each weather variable chosen
 weather_outl <- lapply(weather_var, function(col) det_outl(weatherdata, col))
@@ -364,15 +364,16 @@ str(trip_weather_combo)
 # Select numeric variables from the dataset
 trip_weather_num <- trip_weather_combo %>%
   select(hour, duration, max_temperature_f, mean_temperature_f, min_temperature_f, 
-         max_visibility_miles, mean_visibility_miles, min_visibility_miles, 
-         max_wind_Speed_mph, mean_wind_speed_mph, max_gust_speed_mph, 
-         precipitation_inches, cloud_cover)
+         min_visibility_miles, max_wind_Speed_mph, mean_wind_speed_mph, max_gust_speed_mph, 
+         cloud_cover)
 
 # Remove rows with NA values
 trip_weather_numcl <- na.omit(trip_weather_num)
 
 # Create the correlation matrix
 cor_matrix <- cor(trip_weather_numcl, use = "complete.obs")
+
+
 
 # Plot the correlation matrix
 install.packages("ggcorrplot")
@@ -383,13 +384,3 @@ ggcorrplot(cor_matrix, lab = TRUE, lab_size = 3, type = "full",
            ggtheme = ggplot2::theme_gray())
 
 
-model <- lm(duration ~ max_temperature_f + mean_temperature_f + 
-              min_temperature_f + max_visibility_miles + mean_visibility_miles +
-              min_visibility_miles + max_wind_speed_mph + mean_wind_speed_mph +
-              max_gust_speed_mph + precipitation_inches + cloud_cover, 
-              data = combined_data)
-
-# Create a time series plot
-ggplot(trip_weather_combo, aes(x = start_date, y = duration)) +
-  geom_line() +
-  labs(title = "Bike Rentals Over Time", x = "Date", y = "Duration (minutes)")
