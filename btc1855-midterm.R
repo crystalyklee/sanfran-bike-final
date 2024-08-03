@@ -347,15 +347,24 @@ avg_utilization <- tripdata4 %>%
 install.packages("corrplot")
 library(corrplot)
 
+# Create new variable that calculates trip frequency per day
+trip_frequency <- tripdata4 %>%
+  group_by(start_date) %>%
+  summarise(trip_count = n())
+
+# Join the trip frequency data with the main dataset (e.g., `tripdata4`)
+tripdata5 <- tripdata4 %>%
+  left_join(trip_frequency, by = "start_date")
+
 # Select only the necessary columns from stationdata
 stationdata_city <- stationdata %>%
   select(name, city)  
 
 # Convert zip_code to integer to join with weatherdata zip_code
-tripdata4$zip_code <- as.integer(tripdata4$zip_code)
+tripdata5$zip_code <- as.integer(tripdata5$zip_code)
 
 # Join tripdata4 with the filtered stationdata on start_station_name and name
-tripdata_station <- tripdata4 %>%
+tripdata_station <- tripdata5 %>%
   left_join(stationdata_city, by = c("start_station_name" = "name"))
 
 # Join the tripdata_station dataset with weatherdata2 to join by city and zip_code
@@ -369,7 +378,7 @@ str(final_data)
 
 # Select numeric variables from the dataset
 trip_weather_num <- final_data %>%
-  select(hour, duration, max_temperature_f, mean_temperature_f, min_temperature_f, 
+  select(trip_count, hour, duration, max_temperature_f, mean_temperature_f, min_temperature_f, 
          min_visibility_miles, max_wind_Speed_mph, mean_wind_speed_mph, max_gust_speed_mph, 
          cloud_cover)
 
@@ -386,5 +395,3 @@ library(ggcorrplot)
 ggcorrplot(cor_matrix, lab = TRUE, lab_size = 3, type = "full", 
            colors = c("blue", "white", "maroon"), 
            ggtheme = ggplot2::theme_gray())
-
-
