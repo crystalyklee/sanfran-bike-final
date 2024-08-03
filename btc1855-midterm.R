@@ -2,6 +2,8 @@
 # MIDTERM PROJECT
 # CRYSTAL LEE
 
+library(tidyverse)
+
 stationdata <- read.csv('station.csv')
 tripdata <-read.csv('trip.csv')
 weatherdata <- read.csv('weather.csv')
@@ -36,9 +38,9 @@ summary(weatherdata)
 # Check for duplicates
 any(duplicated(weatherdata))
 
-# Change "T" to 0.01 to indicate trace amounts of precipitation
+Change "T" to 0.01 to indicate trace amounts of precipitation
 weatherdata$precipitation_inches <- 
-  as.numeric(ifelse(weatherdata$precipitation_inches == "T", 
+ as.numeric(ifelse(weatherdata$precipitation_inches == "T", 
                     0.01, weatherdata$precipitation_inches))
 
 # Change date into Date class
@@ -50,7 +52,6 @@ weatherdata[weatherdata == ""] <- NA
 install.packages("funModeling")
 install.packages("Hmisc")
 library(funModeling) 
-library(tidyverse) 
 library(Hmisc)
 
 # EDA on stationdata
@@ -67,7 +68,7 @@ station_eda <- function(stationdata)
 station_eda(stationdata)
 
 # EDA on tripdata
-trip_eda2 <- function(tripdata2)
+trip_eda <- function(tripdata2)
 {
   glimpse(tripdata2)
   print(status(tripdata2))
@@ -116,8 +117,7 @@ colnames(tripdata3)
 colnames(weatherdata)
 
 # Create function to detect outliers using IQR
-
-det_outl <- function(df, col, multiplier = 2) {
+det_outl <- function(df, col, multiplier = 1.5) {
   Q1 <- quantile(df[[col]], 0.25, na.rm = TRUE)
   Q3 <- quantile(df[[col]], 0.75, na.rm = TRUE)
   IQR <- Q3 - Q1
@@ -129,6 +129,9 @@ det_outl <- function(df, col, multiplier = 2) {
 
 # Choosing tripdata3 variables for outlier detection
 trip_var <- c("duration")
+
+# Visualize outliers in tripdata3
+boxplot(tripdata3$duration)
 
 # Detect outliers
 trip_outl <- lapply(trip_var, function(col) det_outl(tripdata3, col))
@@ -146,11 +149,14 @@ tripdata4 <- tripdata3[-trip_outl_all, ]
 
 summary(tripdata4)
 
+# Visualize tripdata4 after removal of outliers
+boxplot(tripdata4$duration)
+
 # Choosing weatherdata variables for outlier detection
 weather_var <- c("max_temperature_f", "mean_temperature_f", "min_temperature_f",
                      "max_visibility_miles", "mean_visibility_miles", "min_visibility_miles",
                      "max_wind_speed_mph", "mean_wind_speed_mph", "max_gust_speed_mph",
-                     "precipitation_inches", "cloud_cover")
+                     "cloud_cover")
 
 # Detect outliers for each weather variable chosen
 weather_outl <- lapply(weather_var, function(col) det_outl(weatherdata, col))
@@ -194,6 +200,20 @@ top_peak_hours <- hourly_volume %>%
   slice_head(n = 1) %>%  
   ungroup()
 
+# Identify rush hours over the weekdays 
+weekday_rush <- hourly_volume %>%
+  group_by(hour) %>%
+  summarise(trip_count = sum(trip_count), .groups = 'drop') 
+
+# Histograms visualizing peak hours over the weekdays
+ggplot(weekday_rush, aes(x = hour, y = trip_count)) +
+  geom_col(data = weekday_rush, aes(x = hour, y = trip_count / 1000), 
+           size = 1.2, show.legend = FALSE, fill = "maroon") +
+  labs(title = "Trip Volume by Hour from Monday to Friday",
+       x = "Hour of the Day",
+       y = "Trip Count in Thousands") +
+  theme_minimal()
+
 # Histograms visualizing peak hours per weekday
 # Encircled red bars are the top peak hours
 ggplot(hourly_volume, aes(x = hour, y = trip_count, fill = day)) +
@@ -209,7 +229,7 @@ ggplot(hourly_volume, aes(x = hour, y = trip_count, fill = day)) +
 # RUSH HOUR STATIONS
 # Filter trips for peak hours
 filt_rush_trips <- tripdata4 %>%
-  semi_join(top_peak_hours, by = c("weekday", "hour"))
+  semi_join(top_peak_hours, by = c("day", "hour"))
 
 # Identify top 10 starting stations during rush hour per weekday
 top_start_stations <- filt_rush_trips %>%
@@ -219,6 +239,16 @@ top_start_stations <- filt_rush_trips %>%
   arrange(desc(trip_count)) %>%
   slice_head(n = 10)
 
+# Histograms visualizing peak hours over the weekdays
+# Create a plot
+ggplot(top_start_stations, aes(x = factor(paste(day, hour, sep = "-")), y = trip_count, fill = start_station_name)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Top 10 Starting Stations During Rush Hour per Weekday",
+       x = "Day-Hour",
+       y = "Trip Count",
+       fill = "Start Station Name") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
 # Identify top 10 ending stations during rush hour per weekday
 top_end_stations <- filt_rush_trips %>%
   group_by(day, hour, end_station_name) %>%
@@ -226,6 +256,16 @@ top_end_stations <- filt_rush_trips %>%
   group_by(day, hour) %>%
   arrange(desc(trip_count)) %>%
   slice_head(n = 10)
+
+# Create a plot
+ggplot(top_end_stations, aes(x = factor(paste(day, hour, sep = "-")), y = trip_count, fill = end_station_name)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Top 10 Ending Stations During Rush Hour per Weekday",
+       x = "Day-Hour",
+       y = "Trip Count",
+       fill = "End Station Name") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
 
 # WEEKDAY STATIONS
 # Identify top 10 most frequent starting stations on the Weekend
@@ -237,6 +277,16 @@ top_start_weekend <- tripdata4 %>%
   arrange(desc(trip_count)) %>%
   slice_head(n = 10)
 
+# Create a plot
+ggplot(top_start_weekend, aes(x = factor(day), y = trip_count, fill = start_station_name)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Top 10 Starting Stations on Weekends",
+       x = "Day",
+       y = "Trip Count",
+       fill = "Start Station Name") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
+  theme(legend.position = "right")
+
 # Identify top 10 most frequent ending stations on the Weekend
 top_end_weekend <- tripdata4 %>%
   filter(day %in% c("Sun", "Sat")) %>%
@@ -245,6 +295,16 @@ top_end_weekend <- tripdata4 %>%
   arrange(day, desc(trip_count)) %>%
   group_by(day) %>%
   slice_head(n = 10)
+
+# Create a plot
+ggplot(top_end_weekend, aes(x = factor(day), y = trip_count, fill = end_station_name)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Top 10 Ending Stations on Weekends",
+       x = "Day",
+       y = "Trip Count",
+       fill = "End Station Name") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
+  theme(legend.position = "right")
 
 #Calculate the average utilization of bikes for 
 #each month (total time used/total time in month).
@@ -275,9 +335,63 @@ unique_bikes_per_month <- tripdata4 %>%
 avg_utilization <- tripdata4 %>%
   group_by(month) %>%
   summarise(total_time_used = sum(duration) / 60, .groups = 'drop') %>%  # Convert to minutes
+  left_join(unique_bikes_per_month, by = "month") %>%
   left_join(days_per_month_df, by = "month") %>%  # Join with days_per_month_df
   mutate(
     total_time_available = days * 24 * 60 * num_bikes,  # Total time per month in minutes
     utilization_mins = total_time_used / total_time_available  # Calculate utilization ratio
   ) %>%
   select(month, utilization_mins)  # Select relevant columns
+
+# WEATHER DATA
+install.packages("corrplot")
+library(corrplot)
+
+# Create new variable that calculates trip frequency per day
+trip_frequency <- tripdata4 %>%
+  group_by(start_date) %>%
+  summarise(trip_count = n())
+
+# Join the trip frequency data with the main dataset (e.g., `tripdata4`)
+tripdata5 <- tripdata4 %>%
+  left_join(trip_frequency, by = "start_date")
+
+# Select only the necessary columns from stationdata
+stationdata_city <- stationdata %>%
+  select(name, city)  
+
+# Convert zip_code to integer to join with weatherdata zip_code
+tripdata5$zip_code <- as.integer(tripdata5$zip_code)
+
+# Join tripdata4 with the filtered stationdata on start_station_name and name
+tripdata_station <- tripdata5 %>%
+  left_join(stationdata_city, by = c("start_station_name" = "name"))
+
+# Join the tripdata_station dataset with weatherdata2 to join by city and zip_code
+# assuming `weatherdata2` has city and zip_code columns
+final_data <- tripdata_station %>%
+  left_join(weatherdata2, by = c("city" = "city", "zip_code" = "zip_code"))
+
+# CORRELATION ANALYSIS ON WEATHER AND TRIP VARIABLES
+# Inspect the data
+str(final_data)
+
+# Select numeric variables from the dataset
+trip_weather_num <- final_data %>%
+  select(trip_count, hour, duration, max_temperature_f, mean_temperature_f, min_temperature_f, 
+         min_visibility_miles, max_wind_Speed_mph, mean_wind_speed_mph, max_gust_speed_mph, 
+         cloud_cover)
+
+# Remove rows with NA values
+trip_weather_numcl <- na.omit(trip_weather_num)
+
+# Create the correlation matrix
+cor_matrix <- cor(trip_weather_numcl, use = "complete.obs")
+
+# Plot the correlation matrix
+install.packages("ggcorrplot")
+library(ggcorrplot)
+# Plot the correlation matrix using ggcorrplot
+ggcorrplot(cor_matrix, lab = TRUE, lab_size = 3, type = "full", 
+           colors = c("blue", "white", "maroon"), 
+           ggtheme = ggplot2::theme_gray())
