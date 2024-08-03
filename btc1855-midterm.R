@@ -38,7 +38,7 @@ summary(weatherdata)
 # Check for duplicates
 any(duplicated(weatherdata))
 
-Change "T" to 0.01 to indicate trace amounts of precipitation
+#Change "T" to 0.01 to indicate trace amounts of precipitation
 weatherdata$precipitation_inches <- 
  as.numeric(ifelse(weatherdata$precipitation_inches == "T", 
                     0.01, weatherdata$precipitation_inches))
@@ -107,7 +107,7 @@ length(canc_trip)
 tripdata3 <- tripdata2[-canc_trip, ]
 
 # Record IDs of cancelled trips
-write.csv(canc_trip, "cancelled_trips.csv", row.names = FALSE)
+write.csv(canc_trip, "1", row.names = FALSE)
 
 # IDENTIFY OUTLIERS
 
@@ -131,7 +131,8 @@ det_outl <- function(df, col, multiplier = 1.5) {
 trip_var <- c("duration")
 
 # Visualize outliers in tripdata3
-boxplot(tripdata3$duration)
+boxplot(tripdata3$duration, main = "Distribution of Trip Duration Data",
+        xlab = "Trip Duration")
 
 # Detect outliers
 trip_outl <- lapply(trip_var, function(col) det_outl(tripdata3, col))
@@ -139,6 +140,27 @@ trip_outl <- lapply(trip_var, function(col) det_outl(tripdata3, col))
 # Unlist the list of outliers and select only unique outliers for removal
 # to avoid duplicate removals
 trip_outl_all <- unique(unlist(trip_outl))
+
+# Record outlier trip IDs
+trip_outl_id <- tripdata3$id[trip_outl_all]
+
+# Investigate subscription type of tripdata4 outliers
+outlier_data <- tripdata3 %>% 
+  filter(id %in% trip_outl_id) %>%
+  select(id, duration, subscription_type) # Adjust column names as needed
+
+# Count the number of customers and subscribers
+subscription_counts <- outlier_data %>%
+  group_by(subscription_type) %>%
+  summarise(count = n())
+
+# Create a bar plot of subscription types for the outliers
+ggplot(outlier_data, aes(x = subscription_type)) +
+  geom_bar(fill = "skyblue") +
+  labs(title = "Distribution of Subscription Types Among Outliers",
+       x = "Subscription Type",
+       y = "Count") +
+  theme_minimal()
 
 # Record outlier trip IDs
 trip_outl_id<- tripdata3$id[trip_outl_all]
@@ -150,7 +172,8 @@ tripdata4 <- tripdata3[-trip_outl_all, ]
 summary(tripdata4)
 
 # Visualize tripdata4 after removal of outliers
-boxplot(tripdata4$duration)
+boxplot(tripdata4$duration, main = "Distribution of Trip Duration Data (without outliers)",
+        xlab = "Trip Duration")
 
 # Choosing weatherdata variables for outlier detection
 weather_var <- c("max_temperature_f", "mean_temperature_f", "min_temperature_f",
