@@ -299,43 +299,41 @@ ggplot(top_end_stations_all, aes(x = reorder(end_station_name, total_trip_count)
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 # WEEKEND STATIONS
-# Identify top 10 most frequent starting stations on the Weekend
+# Identify top 10 most frequent starting stations on the weekend
 top_start_weekend <- tripdata4 %>%
   filter(day %in% c("Sun", "Sat")) %>%
-  group_by(day, start_station_name) %>%
+  group_by(start_station_name) %>%
   summarise(trip_count = n(), .groups = 'drop') %>%
-  group_by(day) %>%
   arrange(desc(trip_count)) %>%
   slice_head(n = 10)
 
-# Create a plot
-ggplot(top_start_weekend, aes(x = factor(day), y = trip_count, fill = start_station_name)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Top 10 Starting Stations on Weekends",
-       x = "Day",
+# Visualize top 10 starting stations over weekend
+ggplot(top_start_weekend, aes(x = reorder(start_station_name, trip_count), y = trip_count, fill = start_station_name)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +  # Flip coordinates to make it easier to read station names
+  labs(title = "Top 10 Starting Stations During the Weekend",
+       x = "Starting Station",
        y = "Trip Count",
-       fill = "Start Station Name") +
-  theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
-  theme(legend.position = "right")
+       fill = "Station Name") +
+  theme_minimal()
 
 # Identify top 10 most frequent ending stations on the Weekend
 top_end_weekend <- tripdata4 %>%
   filter(day %in% c("Sun", "Sat")) %>%
-  group_by(day, end_station_name) %>%
+  group_by(end_station_name) %>%
   summarise(trip_count = n(), .groups = 'drop') %>%
   arrange(day, desc(trip_count)) %>%
-  group_by(day) %>%
   slice_head(n = 10)
 
-# Create a plot
-ggplot(top_end_weekend, aes(x = factor(day), y = trip_count, fill = end_station_name)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Top 10 Ending Stations on Weekends",
-       x = "Day",
+# Visualize top 10 ending stations over weekend
+ggplot(top_start_weekend, aes(x = reorder(start_station_name, trip_count), y = trip_count, fill = start_station_name)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +  # Flip coordinates to make it easier to read station names
+  labs(title = "Top 10 Starting Stations During the Weekend",
+       x = "Starting Station",
        y = "Trip Count",
-       fill = "End Station Name") +
-  theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
-  theme(legend.position = "right")
+       fill = "Station Name") +
+  theme_minimal()
 
 #Calculate the average utilization of bikes for 
 #each month (total time used/total time in month).
