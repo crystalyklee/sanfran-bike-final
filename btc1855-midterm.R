@@ -322,15 +322,15 @@ top_end_weekend <- tripdata4 %>%
   filter(day %in% c("Sun", "Sat")) %>%
   group_by(end_station_name) %>%
   summarise(trip_count = n(), .groups = 'drop') %>%
-  arrange(day, desc(trip_count)) %>%
+  arrange(desc(trip_count)) %>%
   slice_head(n = 10)
 
 # Visualize top 10 ending stations over weekend
-ggplot(top_start_weekend, aes(x = reorder(start_station_name, trip_count), y = trip_count, fill = start_station_name)) +
+ggplot(top_end_weekend, aes(x = reorder(end_station_name, trip_count), y = trip_count, fill = end_station_name)) +
   geom_bar(stat = "identity") +
   coord_flip() +  # Flip coordinates to make it easier to read station names
-  labs(title = "Top 10 Starting Stations During the Weekend",
-       x = "Starting Station",
+  labs(title = "Top 10 Ending Ending During the Weekend",
+       x = "Ending Station",
        y = "Trip Count",
        fill = "Station Name") +
   theme_minimal()
