@@ -285,7 +285,7 @@ top_end_stations_all <- filt_rush_trips %>%
   group_by(hour) %>%
   slice_head(n = 10) 
 
-# Visualize the top 10 starting stations for each rush hour
+# Visualize the top 10 ending stations for each rush hour
 ggplot(top_end_stations_all, aes(x = reorder(end_station_name, total_trip_count), y = total_trip_count, fill = factor(hour))) +
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~hour, scales = 'free_y') +
