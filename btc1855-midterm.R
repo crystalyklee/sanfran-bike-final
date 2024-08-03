@@ -256,6 +256,27 @@ ggplot(hourly_volume, aes(x = hour, y = trip_count, fill = day)) +
 filt_rush_trips <- tripdata4 %>%
   semi_join(top_peak_hours, by = c("day", "hour"))
 
+# Identify top 10 starting stations during rush hour across all weekdays
+top_start_stations_all <- filt_rush_trips %>%
+  group_by(hour, start_station_name) %>%
+  summarise(total_trip_count = n(), .groups = 'drop') %>%
+  arrange(hour, desc(total_trip_count)) %>%
+  group_by(hour) %>%
+  slice_head(n = 10) 
+
+# Visualize the top 10 starting stations for each rush hour
+ggplot(top_start_stations_all, aes(x = reorder(start_station_name, total_trip_count), y = total_trip_count, fill = factor(hour))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~hour, scales = 'free_y') +
+  coord_flip() + 
+  labs(title = "Top 10 Starting Stations During Peak Hours",
+       x = "Starting Station",
+       y = "Total Trip Count",
+       fill = "Hour") +
+  scale_fill_discrete(labels = legend_labels) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
 # Identify top 10 starting stations during rush hour per weekday
 top_start_stations <- filt_rush_trips %>%
   group_by(day, hour, start_station_name) %>%
