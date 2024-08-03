@@ -164,6 +164,8 @@ ggplot(outlier_data, aes(x = subscription_type)) +
 
 # Record outlier trip IDs
 trip_outl_id<- tripdata3$id[trip_outl_all]
+
+# Save trip outliers in csv file
 write.csv(data.frame(TripID = trip_outl_id), "trip_outliers_ids.csv", row.names = FALSE)
 
 # Remove duration outliers from the trip dataset
