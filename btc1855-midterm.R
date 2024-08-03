@@ -240,14 +240,14 @@ top_start_stations <- filt_rush_trips %>%
   slice_head(n = 10)
 
 # Histograms visualizing peak hours over the weekdays
-###### PROBLEM 
-ggplot(top_start_stations, aes(x = hour, y = trip_count)) +
-  geom_col(data = top_start_stations, aes(x = hour, y = trip_count), 
-           size = 1.2, show.legend = FALSE, fill = "maroon") +
-  labs(title = "Top Starting Stations Over Weekdays",
-       x = "Starting Stations",
-       y = "Trip Count") +
-  theme_minimal()
+# Create a plot
+ggplot(top_start_stations, aes(x = factor(paste(day, hour, sep = "-")), y = trip_count, fill = start_station_name)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Top 10 Starting Stations During Rush Hour per Weekday",
+       x = "Day-Hour",
+       y = "Trip Count",
+       fill = "Start Station Name") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 # Identify top 10 ending stations during rush hour per weekday
 top_end_stations <- filt_rush_trips %>%
@@ -256,6 +256,16 @@ top_end_stations <- filt_rush_trips %>%
   group_by(day, hour) %>%
   arrange(desc(trip_count)) %>%
   slice_head(n = 10)
+
+# Create a plot
+ggplot(top_end_stations, aes(x = factor(paste(day, hour, sep = "-")), y = trip_count, fill = end_station_name)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Top 10 Ending Stations During Rush Hour per Weekday",
+       x = "Day-Hour",
+       y = "Trip Count",
+       fill = "End Station Name") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
 
 # WEEKDAY STATIONS
 # Identify top 10 most frequent starting stations on the Weekend
@@ -267,6 +277,16 @@ top_start_weekend <- tripdata4 %>%
   arrange(desc(trip_count)) %>%
   slice_head(n = 10)
 
+# Create a plot
+ggplot(top_start_weekend, aes(x = factor(day), y = trip_count, fill = start_station_name)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Top 10 Starting Stations on Weekends",
+       x = "Day",
+       y = "Trip Count",
+       fill = "Start Station Name") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
+  theme(legend.position = "right")
+
 # Identify top 10 most frequent ending stations on the Weekend
 top_end_weekend <- tripdata4 %>%
   filter(day %in% c("Sun", "Sat")) %>%
@@ -275,6 +295,16 @@ top_end_weekend <- tripdata4 %>%
   arrange(day, desc(trip_count)) %>%
   group_by(day) %>%
   slice_head(n = 10)
+
+# Create a plot
+ggplot(top_end_weekend, aes(x = factor(day), y = trip_count, fill = end_station_name)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Top 10 Ending Stations on Weekends",
+       x = "Day",
+       y = "Trip Count",
+       fill = "End Station Name") +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
+  theme(legend.position = "right")
 
 #Calculate the average utilization of bikes for 
 #each month (total time used/total time in month).
