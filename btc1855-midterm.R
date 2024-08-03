@@ -222,7 +222,7 @@ hourly_volume <- tripdata4 %>%
 top_peak_hours <- hourly_volume %>%
   group_by(day) %>%
   arrange(desc(trip_count)) %>%
-  slice_head(n = 1) %>%  
+  slice_head(n = 2) %>%  
   ungroup()
 
 # Identify rush hours over the weekdays 
@@ -244,8 +244,8 @@ ggplot(weekday_rush, aes(x = hour, y = trip_count)) +
 ggplot(hourly_volume, aes(x = hour, y = trip_count, fill = day)) +
   geom_col() +
   facet_wrap(~day, scales = 'free_y') +
-  geom_col(data = top_peak_hours, aes(x = hour, y = trip_count), 
-           color = "red", fill = NA, size = 1.2, show.legend = FALSE) +
+  geom_point(data = top_peak_hours, aes(x = hour, y = trip_count), 
+             shape = 21, color = "red", fill = NA, size = 5, stroke = 1.5) +
   labs(title = "Trip Volume by Hour for Each Weekday",
        x = "Hour of the Day",
        y = "Trip Count") +
