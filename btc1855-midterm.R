@@ -347,22 +347,28 @@ avg_utilization <- tripdata4 %>%
 install.packages("corrplot")
 library(corrplot)
 
-# Combine tripdata4 and weatherdata2 by matching start_date to date and zip_code
-tripdata4$zip_code <- as.integer(tripdata4$zip_code) # Change tripdata4 zip_code to integer for joining
+# Select only the necessary columns from stationdata
+stationdata_city <- stationdata %>%
+  select(name, city)  
 
-trip_weather_combo <- inner_join(tripdata4, weatherdata2, 
-                                 by = c("start_date" = "date", "zip_code" = "zip_code"))
+# Convert zip_code to integer to join with weatherdata zip_code
+tripdata4$zip_code <- as.integer(tripdata4$zip_code)
 
-# Left join so we can keep all the info from tripdata4 and include matching weatherdata2 where possible
-trip_weather_combo2 <- left_join(tripdata4, weatherdata2, 
-                                 by = c("start_date" = "date", "zip_code" = "zip_code"))
+# Join tripdata4 with the filtered stationdata on start_station_name and name
+tripdata_station <- tripdata4 %>%
+  left_join(stationdata_city, by = c("start_station_name" = "name"))
+
+# Join the tripdata_station dataset with weatherdata2 to join by city and zip_code
+# assuming `weatherdata2` has city and zip_code columns
+final_data <- tripdata_station %>%
+  left_join(weatherdata2, by = c("city" = "city", "zip_code" = "zip_code"))
 
 # CORRELATION ANALYSIS ON WEATHER AND TRIP VARIABLES
 # Inspect the data
-str(trip_weather_combo)
+str(final_data)
 
 # Select numeric variables from the dataset
-trip_weather_num <- trip_weather_combo %>%
+trip_weather_num <- final_data %>%
   select(hour, duration, max_temperature_f, mean_temperature_f, min_temperature_f, 
          min_visibility_miles, max_wind_Speed_mph, mean_wind_speed_mph, max_gust_speed_mph, 
          cloud_cover)
@@ -372,8 +378,6 @@ trip_weather_numcl <- na.omit(trip_weather_num)
 
 # Create the correlation matrix
 cor_matrix <- cor(trip_weather_numcl, use = "complete.obs")
-
-
 
 # Plot the correlation matrix
 install.packages("ggcorrplot")
