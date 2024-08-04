@@ -372,8 +372,8 @@ avg_utilization <- tripdata4 %>%
   select(month, utilization_mins)  # Select relevant columns
 
 # WEATHER DATA
-install.packages("corrplot")
-library(corrplot)
+install.packages("ggcorrplot")
+library(ggcorrplot)
 
 # Create new variable that calculates trip frequency per day
 trip_frequency <- tripdata4 %>%
@@ -416,9 +416,6 @@ trip_weather_numcl <- na.omit(trip_weather_num)
 # Create the correlation matrix
 cor_matrix <- cor(trip_weather_numcl, use = "complete.obs")
 
-# Plot the correlation matrix
-install.packages("ggcorrplot")
-library(ggcorrplot)
 # Plot the correlation matrix using ggcorrplot
 ggcorrplot(cor_matrix, lab = TRUE, lab_size = 3, type = "full", 
            colors = c("blue", "white", "maroon"), 
