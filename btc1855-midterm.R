@@ -3,6 +3,7 @@
 # CRYSTAL LEE
 
 library(tidyverse)
+library(ggplot2)
 
 stationdata <- read.csv('station.csv')
 tripdata <-read.csv('trip.csv')
@@ -273,7 +274,6 @@ ggplot(top_start_stations_all, aes(x = reorder(start_station_name, total_trip_co
        x = "Starting Station",
        y = "Total Trip Count",
        fill = "Hour") +
-  scale_fill_discrete(labels = legend_labels) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
