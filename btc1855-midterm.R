@@ -3,6 +3,7 @@
 # CRYSTAL LEE
 
 library(tidyverse)
+library(ggplot2)
 
 stationdata <- read.csv('station.csv')
 tripdata <-read.csv('trip.csv')
@@ -38,7 +39,7 @@ summary(weatherdata)
 # Check for duplicates
 any(duplicated(weatherdata))
 
-Change "T" to 0.01 to indicate trace amounts of precipitation
+#Change "T" to 0.01 to indicate trace amounts of precipitation
 weatherdata$precipitation_inches <- 
  as.numeric(ifelse(weatherdata$precipitation_inches == "T", 
                     0.01, weatherdata$precipitation_inches))
@@ -107,7 +108,7 @@ length(canc_trip)
 tripdata3 <- tripdata2[-canc_trip, ]
 
 # Record IDs of cancelled trips
-write.csv(canc_trip, "cancelled_trips.csv", row.names = FALSE)
+write.csv(canc_trip, "1", row.names = FALSE)
 
 # IDENTIFY OUTLIERS
 
@@ -131,7 +132,8 @@ det_outl <- function(df, col, multiplier = 1.5) {
 trip_var <- c("duration")
 
 # Visualize outliers in tripdata3
-boxplot(tripdata3$duration)
+boxplot(tripdata3$duration, main = "Distribution of Trip Duration Data",
+        xlab = "Trip Duration")
 
 # Detect outliers
 trip_outl <- lapply(trip_var, function(col) det_outl(tripdata3, col))
@@ -141,7 +143,30 @@ trip_outl <- lapply(trip_var, function(col) det_outl(tripdata3, col))
 trip_outl_all <- unique(unlist(trip_outl))
 
 # Record outlier trip IDs
+trip_outl_id <- tripdata3$id[trip_outl_all]
+
+# Investigate subscription type of tripdata4 outliers
+outlier_data <- tripdata3 %>% 
+  filter(id %in% trip_outl_id) %>%
+  select(id, duration, subscription_type) # Adjust column names as needed
+
+# Count the number of customers and subscribers
+subscription_counts <- outlier_data %>%
+  group_by(subscription_type) %>%
+  summarise(count = n())
+
+# Create a bar plot of subscription types for the outliers
+ggplot(outlier_data, aes(x = subscription_type)) +
+  geom_bar(fill = "skyblue") +
+  labs(title = "Distribution of Subscription Types Among Outliers",
+       x = "Subscription Type",
+       y = "Count") +
+  theme_minimal()
+
+# Record outlier trip IDs
 trip_outl_id<- tripdata3$id[trip_outl_all]
+
+# Save trip outliers in csv file
 write.csv(data.frame(TripID = trip_outl_id), "trip_outliers_ids.csv", row.names = FALSE)
 
 # Remove duration outliers from the trip dataset
@@ -150,7 +175,8 @@ tripdata4 <- tripdata3[-trip_outl_all, ]
 summary(tripdata4)
 
 # Visualize tripdata4 after removal of outliers
-boxplot(tripdata4$duration)
+boxplot(tripdata4$duration, main = "Distribution of Trip Duration Data (without outliers)",
+        xlab = "Trip Duration")
 
 # Choosing weatherdata variables for outlier detection
 weather_var <- c("max_temperature_f", "mean_temperature_f", "min_temperature_f",
@@ -197,7 +223,7 @@ hourly_volume <- tripdata4 %>%
 top_peak_hours <- hourly_volume %>%
   group_by(day) %>%
   arrange(desc(trip_count)) %>%
-  slice_head(n = 1) %>%  
+  slice_head(n = 2) %>%  
   ungroup()
 
 # Identify rush hours over the weekdays 
@@ -208,7 +234,7 @@ weekday_rush <- hourly_volume %>%
 # Histograms visualizing peak hours over the weekdays
 ggplot(weekday_rush, aes(x = hour, y = trip_count)) +
   geom_col(data = weekday_rush, aes(x = hour, y = trip_count / 1000), 
-           size = 1.2, show.legend = FALSE, fill = "maroon") +
+           linewidth = 1.2, show.legend = FALSE, fill = "maroon") +
   labs(title = "Trip Volume by Hour from Monday to Friday",
        x = "Hour of the Day",
        y = "Trip Count in Thousands") +
@@ -219,8 +245,8 @@ ggplot(weekday_rush, aes(x = hour, y = trip_count)) +
 ggplot(hourly_volume, aes(x = hour, y = trip_count, fill = day)) +
   geom_col() +
   facet_wrap(~day, scales = 'free_y') +
-  geom_col(data = top_peak_hours, aes(x = hour, y = trip_count), 
-           color = "red", fill = NA, size = 1.2, show.legend = FALSE) +
+  geom_point(data = top_peak_hours, aes(x = hour, y = trip_count), 
+             shape = 21, color = "red", fill = NA, size = 5, stroke = 1.5) +
   labs(title = "Trip Volume by Hour for Each Weekday",
        x = "Hour of the Day",
        y = "Trip Count") +
@@ -231,80 +257,82 @@ ggplot(hourly_volume, aes(x = hour, y = trip_count, fill = day)) +
 filt_rush_trips <- tripdata4 %>%
   semi_join(top_peak_hours, by = c("day", "hour"))
 
-# Identify top 10 starting stations during rush hour per weekday
-top_start_stations <- filt_rush_trips %>%
-  group_by(day, hour, start_station_name) %>%
-  summarise(trip_count = n(), .groups = 'drop') %>%
-  group_by(day, hour) %>%
-  arrange(desc(trip_count)) %>%
-  slice_head(n = 10)
+# Identify top 10 starting stations during rush hour across all weekdays
+top_start_stations_all <- filt_rush_trips %>%
+  group_by(hour, start_station_name) %>%
+  summarise(total_trip_count = n(), .groups = 'drop') %>%
+  arrange(hour, desc(total_trip_count)) %>%
+  group_by(hour) %>%
+  slice_head(n = 10) 
 
-# Histograms visualizing peak hours over the weekdays
-# Create a plot
-ggplot(top_start_stations, aes(x = factor(paste(day, hour, sep = "-")), y = trip_count, fill = start_station_name)) +
+# Visualize the top 10 starting stations for each rush hour
+ggplot(top_start_stations_all, aes(x = reorder(start_station_name, total_trip_count), y = total_trip_count, fill = factor(hour))) +
   geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Top 10 Starting Stations During Rush Hour per Weekday",
-       x = "Day-Hour",
-       y = "Trip Count",
-       fill = "Start Station Name") +
+  facet_wrap(~hour, scales = 'free_y') +
+  coord_flip() + 
+  labs(title = "Top 10 Starting Stations During Peak Hours",
+       x = "Starting Station",
+       y = "Total Trip Count",
+       fill = "Hour") +
+  theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-# Identify top 10 ending stations during rush hour per weekday
-top_end_stations <- filt_rush_trips %>%
-  group_by(day, hour, end_station_name) %>%
-  summarise(trip_count = n(), .groups = 'drop') %>%
-  group_by(day, hour) %>%
-  arrange(desc(trip_count)) %>%
-  slice_head(n = 10)
+# Identify top 10 ending stations during rush hour across all weekdays
+top_end_stations_all <- filt_rush_trips %>%
+  group_by(hour, end_station_name) %>%
+  summarise(total_trip_count = n(), .groups = 'drop') %>%
+  arrange(hour, desc(total_trip_count)) %>%
+  group_by(hour) %>%
+  slice_head(n = 10) 
 
-# Create a plot
-ggplot(top_end_stations, aes(x = factor(paste(day, hour, sep = "-")), y = trip_count, fill = end_station_name)) +
+# Visualize the top 10 ending stations for each rush hour
+ggplot(top_end_stations_all, aes(x = reorder(end_station_name, total_trip_count), y = total_trip_count, fill = factor(hour))) +
   geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Top 10 Ending Stations During Rush Hour per Weekday",
-       x = "Day-Hour",
-       y = "Trip Count",
-       fill = "End Station Name") +
+  facet_wrap(~hour, scales = 'free_y') +
+  coord_flip() + 
+  labs(title = "Top 10 Ending Stations During Peak Hours",
+       x = "Ending Station",
+       y = "Total Trip Count",
+       fill = "Hour") +
+  theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-
-# WEEKDAY STATIONS
-# Identify top 10 most frequent starting stations on the Weekend
+# WEEKEND STATIONS
+# Identify top 10 most frequent starting stations on the weekend
 top_start_weekend <- tripdata4 %>%
   filter(day %in% c("Sun", "Sat")) %>%
-  group_by(day, start_station_name) %>%
+  group_by(start_station_name) %>%
   summarise(trip_count = n(), .groups = 'drop') %>%
-  group_by(day) %>%
   arrange(desc(trip_count)) %>%
   slice_head(n = 10)
 
-# Create a plot
-ggplot(top_start_weekend, aes(x = factor(day), y = trip_count, fill = start_station_name)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Top 10 Starting Stations on Weekends",
-       x = "Day",
+# Visualize top 10 starting stations over weekend
+ggplot(top_start_weekend, aes(x = reorder(start_station_name, trip_count), y = trip_count, fill = start_station_name)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +  # Flip coordinates to make it easier to read station names
+  labs(title = "Top 10 Starting Stations During the Weekend",
+       x = "Starting Station",
        y = "Trip Count",
-       fill = "Start Station Name") +
-  theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
-  theme(legend.position = "right")
+       fill = "Station Name") +
+  theme_minimal()
 
 # Identify top 10 most frequent ending stations on the Weekend
 top_end_weekend <- tripdata4 %>%
   filter(day %in% c("Sun", "Sat")) %>%
-  group_by(day, end_station_name) %>%
+  group_by(end_station_name) %>%
   summarise(trip_count = n(), .groups = 'drop') %>%
-  arrange(day, desc(trip_count)) %>%
-  group_by(day) %>%
+  arrange(desc(trip_count)) %>%
   slice_head(n = 10)
 
-# Create a plot
-ggplot(top_end_weekend, aes(x = factor(day), y = trip_count, fill = end_station_name)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Top 10 Ending Stations on Weekends",
-       x = "Day",
+# Visualize top 10 ending stations over weekend
+ggplot(top_end_weekend, aes(x = reorder(end_station_name, trip_count), y = trip_count, fill = end_station_name)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +  # Flip coordinates to make it easier to read station names
+  labs(title = "Top 10 Ending Ending During the Weekend",
+       x = "Ending Station",
        y = "Trip Count",
-       fill = "End Station Name") +
-  theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
-  theme(legend.position = "right")
+       fill = "Station Name") +
+  theme_minimal()
 
 #Calculate the average utilization of bikes for 
 #each month (total time used/total time in month).
@@ -344,8 +372,8 @@ avg_utilization <- tripdata4 %>%
   select(month, utilization_mins)  # Select relevant columns
 
 # WEATHER DATA
-install.packages("corrplot")
-library(corrplot)
+install.packages("ggcorrplot")
+library(ggcorrplot)
 
 # Create new variable that calculates trip frequency per day
 trip_frequency <- tripdata4 %>%
@@ -388,9 +416,6 @@ trip_weather_numcl <- na.omit(trip_weather_num)
 # Create the correlation matrix
 cor_matrix <- cor(trip_weather_numcl, use = "complete.obs")
 
-# Plot the correlation matrix
-install.packages("ggcorrplot")
-library(ggcorrplot)
 # Plot the correlation matrix using ggcorrplot
 ggcorrplot(cor_matrix, lab = TRUE, lab_size = 3, type = "full", 
            colors = c("blue", "white", "maroon"), 
