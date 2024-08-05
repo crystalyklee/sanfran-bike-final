@@ -272,7 +272,7 @@ ggplot(top_start_stations_all, aes(x = reorder(start_station_name, total_trip_co
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~hour, scales = 'free_y') +
   coord_flip() + 
-  labs(title = "Top 10 Starting Stations During Peak Hours",
+  labs(title = "Top 10 Starting Stations During Peak Hours (Weekdays)",
        x = "Starting Station",
        y = "Total Trip Count",
        fill = "Hour") +
@@ -292,7 +292,7 @@ ggplot(top_end_stations_all, aes(x = reorder(end_station_name, total_trip_count)
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~hour, scales = 'free_y') +
   coord_flip() + 
-  labs(title = "Top 10 Ending Stations During Peak Hours",
+  labs(title = "Top 10 Ending Stations During Peak Hours (Weekdays)",
        x = "Ending Station",
        y = "Total Trip Count",
        fill = "Hour") +
