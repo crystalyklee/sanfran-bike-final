@@ -2,8 +2,10 @@
 # MIDTERM PROJECT
 # CRYSTAL LEE
 
+library(dplyr)
 library(tidyverse)
 library(ggplot2)
+library(lubridate)
 
 stationdata <- read.csv('station.csv')
 tripdata <-read.csv('trip.csv')
@@ -80,7 +82,6 @@ trip_eda <- function(tripdata2)
 }
 
 trip_eda(tripdata2)
-
 
 # EDA on weatherdata
 weather_eda <- function(weatherdata)
@@ -197,8 +198,6 @@ weatherdata2 <- weatherdata[-weather_outl_all, ]
 summary(weatherdata2)
 
 # IDENTIFY RUSH HOURS
-library(lubridate)
-library(dplyr)
 
 # Remove extra spaces in start_time so we can convert it to POSIXct 
 tripdata4$start_time <- trimws(tripdata4$start_time)
