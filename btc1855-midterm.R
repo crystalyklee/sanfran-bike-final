@@ -316,7 +316,8 @@ ggplot(top_start_weekend, aes(x = reorder(start_station_name, trip_count), y = t
        x = "Starting Station",
        y = "Trip Count",
        fill = "Station Name") +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.position = "none")  # Remove the legend
 
 # Identify top 10 most frequent ending stations on the Weekend
 top_end_weekend <- tripdata4 %>%
@@ -334,7 +335,8 @@ ggplot(top_end_weekend, aes(x = reorder(end_station_name, trip_count), y = trip_
        x = "Ending Station",
        y = "Trip Count",
        fill = "Station Name") +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.position = "none")  # Remove the legend
 
 #Calculate the average utilization of bikes for 
 #each month (total time used/total time in month).
