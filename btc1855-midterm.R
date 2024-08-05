@@ -330,7 +330,7 @@ top_end_weekend <- tripdata4 %>%
 ggplot(top_end_weekend, aes(x = reorder(end_station_name, trip_count), y = trip_count, fill = end_station_name)) +
   geom_bar(stat = "identity") +
   coord_flip() +  # Flip coordinates to make it easier to read station names
-  labs(title = "Top 10 Ending Ending During the Weekend",
+  labs(title = "Top 10 Ending Stations During the Weekend",
        x = "Ending Station",
        y = "Trip Count",
        fill = "Station Name") +
