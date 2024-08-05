@@ -192,7 +192,7 @@ weather_outl <- lapply(weather_var, function(col) det_outl(weatherdata, col))
 weather_outl_all <- unique(unlist(weather_outl))
 
 # Save weather outliers in a CSV file
-write.csv(weather_outliers, "weather_outliers.csv", row.names = FALSE)
+write.csv(weather_outl_all, "weather_outliers.csv", row.names = FALSE)
 
 # Remove duration outliers from the weather dataset
 weatherdata2 <- weatherdata[-weather_outl_all, ]
