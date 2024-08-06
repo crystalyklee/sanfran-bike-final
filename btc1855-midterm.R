@@ -146,10 +146,10 @@ trip_outl_all <- unique(unlist(trip_outl))
 # Record outlier trip IDs
 trip_outl_id <- tripdata3$id[trip_outl_all]
 
-# Investigate subscription type of tripdata4 outliers
+# Investigate subscription type of tripdata outliers
 outlier_data <- tripdata3 %>% 
   filter(id %in% trip_outl_id) %>%
-  select(id, duration, subscription_type) # Adjust column names as needed
+  select(id, duration, subscription_type)
 
 # Count the number of customers and subscribers
 subscription_counts <- outlier_data %>%
