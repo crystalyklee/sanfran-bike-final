@@ -227,7 +227,8 @@ top_peak_hours <- hourly_volume %>%
   arrange(desc(trip_count)) %>%
   slice_head(n = 2) %>%  
   ungroup()
-                       # Identify rush hours over the weekdays 
+
+# Identify rush hours over the weekdays 
 weekday_rush <- hourly_volume %>%
   group_by(hour) %>%
   summarise(trip_count = sum(trip_count), .groups = 'drop') 
