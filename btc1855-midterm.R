@@ -242,20 +242,6 @@ ggplot(weekday_rush, aes(x = hour, y = trip_count)) +
        y = "Trip Count in Thousands") +
   theme_minimal()
 
-# Identify rush hours over the weekdays 
-weekday_rush <- hourly_volume %>%
-  group_by(hour) %>%
-  summarise(trip_count = sum(trip_count), .groups = 'drop') 
-
-# Histograms visualizing peak hours over the weekdays
-ggplot(weekday_rush, aes(x = hour, y = trip_count)) +
-  geom_col(data = weekday_rush, aes(x = hour, y = trip_count / 1000), 
-           linewidth = 1.2, show.legend = FALSE, fill = "maroon") +
-  labs(title = "Trip Volume by Hour from Monday to Friday",
-       x = "Hour of the Day",
-       y = "Trip Count in Thousands") +
-  theme_minimal()
-
 # Histograms visualizing peak hours per weekday
 # Encircled red bars are the top peak hours
 ggplot(hourly_volume, aes(x = hour, y = trip_count, fill = day)) +
