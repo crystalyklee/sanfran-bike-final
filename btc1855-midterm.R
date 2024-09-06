@@ -51,13 +51,16 @@ weatherdata$date <- mdy(weatherdata$date)
 weatherdata[weatherdata == ""] <- NA
 
 # EXPLORATORY DATA ANALYSIS
-
-install.packages("funModeling")
-install.packages("Hmisc")
+# SK  It may at times be okay to include the code installing packages but no okay to enforce 
+# re-installing packages every time a code is sourced. Best practice is to include these 
+# lines and comment them. Then ask the user to un-comment when necessary.
+#install.packages("funModeling")
+#install.packages("Hmisc")
 library(funModeling) 
 library(Hmisc)
 
 # EDA on stationdata
+# SK Good idea to put EDA commands in a function
 station_eda <- function(stationdata)
 {
   glimpse(stationdata)
@@ -71,6 +74,12 @@ station_eda <- function(stationdata)
 station_eda(stationdata)
 
 # EDA on tripdata
+# SK (Points taken) But it's a really bad idea to re-create that same function
+# with a different input. "Create once, use multiple times" is the idea of a function.
+# Instead of re-creating it below, you could have called the above function as:
+# station_eda(tripdata2)
+# and you would have got the exact same result. 
+
 trip_eda <- function(tripdata2)
 {
   glimpse(tripdata2)
@@ -80,10 +89,12 @@ trip_eda <- function(tripdata2)
   plot_num(tripdata2)
   describe(tripdata2)
 }
-
+# SK (Points taken) The output of the code below shows 70 unique start/end station IDs, and 
+# 74 unique start/end station names. This is a discrepancy worth looking into.
 trip_eda(tripdata2)
 
 # EDA on weatherdata
+# SK Same as above
 weather_eda <- function(weatherdata)
 {
   glimpse(weatherdata)
@@ -119,6 +130,7 @@ colnames(tripdata3)
 colnames(weatherdata)
 
 # Create function to detect outliers using IQR
+# SK Pretty function. 
 det_outl <- function(df, col, multiplier = 1.5) {
   Q1 <- quantile(df[[col]], 0.25, na.rm = TRUE)
   Q3 <- quantile(df[[col]], 0.75, na.rm = TRUE)
@@ -137,6 +149,7 @@ boxplot(tripdata3$duration, main = "Distribution of Trip Duration Data",
         xlab = "Trip Duration")
 
 # Detect outliers
+# SK Good use of lapply
 trip_outl <- lapply(trip_var, function(col) det_outl(tripdata3, col))
 
 # Unlist the list of outliers and select only unique outliers for removal
@@ -184,6 +197,12 @@ weather_var <- c("max_temperature_f", "mean_temperature_f", "min_temperature_f",
                      "max_visibility_miles", "mean_visibility_miles", "min_visibility_miles",
                      "max_wind_speed_mph", "mean_wind_speed_mph", "max_gust_speed_mph",
                      "cloud_cover")
+# SK (Points taken) Detecting and removing outliers does not mean removing every value that
+# does not contribute to a normal distribution. Outliers are typically 
+# abnormal values that are likely unnatural/incorrect. Removing outliers from
+# wind speed, temperature or visibility will you with only mild weather days.
+# Do you expect to find a correlation between weather and bike usage in this
+# scenario?
 
 # Detect outliers for each weather variable chosen
 weather_outl <- lapply(weather_var, function(col) det_outl(weatherdata, col))
@@ -206,6 +225,8 @@ summary(weatherdata2)
 tripdata4$start_time <- trimws(tripdata4$start_time)
 
 # Combine start_date and start_time to create a start_datetime column
+# SK (Points taken) The original dataset already had a date-time combined column.
+# You need to keep track of your changes on a dataset.
 tripdata4$start_datetime <- as.POSIXct(paste(tripdata4$start_date, tripdata4$start_time), format="%Y-%m-%d %H:%M")
 
 # Extract day of the week and hour
@@ -222,6 +243,7 @@ hourly_volume <- tripdata4 %>%
   summarise(trip_count = n(), .groups = 'drop')  # Calculate trips per hour
 
 # Find the top peak hour for each weekday 
+# SK "Rush hour" is not necessarily one hour long. 
 top_peak_hours <- hourly_volume %>%
   group_by(day) %>%
   arrange(desc(trip_count)) %>%
@@ -348,6 +370,7 @@ tripdata4 <- tripdata4 %>%
   )
 
 # Create a data frame with days per month using short-form month names
+# SK Pro tip: lubridate package already has a days_in_month() function!
 days_per_month_df <- tibble(
   month = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
   days = c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)  # Adjust February if needed
@@ -376,7 +399,8 @@ avg_utilization <- tripdata4 %>%
   select(month, utilization_mins)  # Select relevant columns
 
 # WEATHER DATA
-install.packages("ggcorrplot")
+# SK Avoid putting uncommented install.packages() in your code
+#install.packages("ggcorrplot")
 library(ggcorrplot)
 
 # Create new variable that calculates trip frequency per day
@@ -393,6 +417,8 @@ stationdata_city <- stationdata %>%
   select(name, city)  
 
 # Convert zip_code to integer to join with weatherdata zip_code
+# SK Trip data already had 809 NAs in zip_code. Now you have 4363.
+# Meaning you lost over 4000 rows of trip data connections to weather data 
 tripdata5$zip_code <- as.integer(tripdata5$zip_code)
 
 # Join tripdata4 with the filtered stationdata on start_station_name and name
@@ -401,8 +427,14 @@ tripdata_station <- tripdata5 %>%
 
 # Join the tripdata_station dataset with weatherdata2 to join by city and zip_code
 # assuming `weatherdata2` has city and zip_code columns
+# SK Do not "assume" ^. You are handling the data, you should know.
 final_data <- tripdata_station %>%
   left_join(weatherdata2, by = c("city" = "city", "zip_code" = "zip_code"))
+# SK (Points taken) Weather data has the weather info for each city for each day 
+# of the year. That is what EDA above told you. The join condition between trip  
+# and weather should be date + city. 
+# Your final_data has over 9.5 million rows when it should NOT have more than your 
+# trip dataset.
 
 # CORRELATION ANALYSIS ON WEATHER AND TRIP VARIABLES
 # Inspect the data
